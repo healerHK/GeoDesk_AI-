@@ -19,20 +19,14 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
+# Quick-start development settings - updated for production
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
 
-## For adding GDAL to the environment, check README for explanation
-if os.name == 'nt':
-    VENV_BASE = os.environ['VIRTUAL_ENV']
-    os.environ['PATH'] = os.path.join(VENV_BASE, 'Lib\\site-packages\\osgeo') + ';' + os.environ['PATH']
-    os.environ['PROJ_LIB'] = os.path.join(VENV_BASE, 'Lib\\site-packages\\osgeo\\data\\proj') + ';' + os.environ['PATH']
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-^#f@e(-h%=$vdha5x)j9n44^n0sl2)92sav8eknl&@_g9tu2tk')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-^#f@e(-h%=$vdha5x)j9n44^n0sl2)92sav8eknl&@_g9tu2tk')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 CORS_ALLOW_HEADERS = (
     'x-requested-with',
@@ -49,17 +43,14 @@ CORS_ALLOW_HEADERS = (
 )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ('GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS')
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+CSRF_TRUSTED_ORIGINS = ["https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net"]
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Example: Allow requests from your frontend application running on localhost
-    "http://127.0.0.1:3000" 
-       # Add more origins as needed
+    'https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net',
 ]
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-SITE_HOST = "127.0.0.1"
+ALLOWED_HOSTS = ['geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net']
+SITE_HOST = "geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net"
 SITE_ID = 1
-SITE_URL = 'http://127.0.0.1:8000'
-
+SITE_URL = 'https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net'
 
 # Application definition
 PROJECT_APPS = [
@@ -83,7 +74,6 @@ PROJECT_APPS = [
     'notification'
 ]
 
-
 INSTALLED_APPS = [
     'dal',
     'dal_select2',
@@ -99,7 +89,6 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     'django.contrib.humanize',
     'leaflet',
-
     'channels',
     'common',
 ] + PROJECT_APPS
@@ -151,61 +140,29 @@ REST_FRAMEWORK = {
      'DEFAULT_PERMISSIONS_CLASSES': (
       'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.IsAdminUser',
-         
      ),
 }
 
-#Authentication backends
+# Authentication backends
 AUTHENTICATION_BACKENDS = (
-    #'user.authentication.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
 WSGI_APPLICATION = 'main.wsgi.application'
 ASGI_APPLICATION = 'main.asgi.application'
 
-# TODO: In production we want to use a redis server.
+# Use Redis for production if available, otherwise fallback to InMemoryChannelLayer
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379/0')],
+        },
     }
 }
 
 # Database
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
-
-# Just basic setups for different backends, our .env file will define which is actually used as shown below
-# this definition. Defaults to sqlite3.
-_db_backend_options = {
-    'MYSQL': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
-    },
-    'POSTGRES': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    },
-    'POSTGIS': {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    },
-    'sqlite3': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 DATABASES = {
     'default': {
@@ -213,9 +170,9 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASS'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT', '5432'),
-    }  # _db_backend_options[os.environ.get('DB_BACKEND', 'sqlite3')]
+    }
 }
 
 # Password validation
@@ -244,7 +201,7 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # 'mandatory' #'optional' 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # Email confirmation
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[OreFox.com]"
@@ -256,13 +213,11 @@ ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 1800
 ACCOUNT_PASSWORD_MIN_LENGTH = 8
 
 # Other settings
-# ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 SOCIALACCOUNT_AUTO_SIGNUP = False
 
 LOGIN_REDIRECT_URL = 'appboard:home'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'user:login'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
@@ -273,18 +228,17 @@ DATE_FORMAT = 'M, d. Y'
 DATETIME_FORMAT = 'M, d. Y. H:i:s e'
 USE_I18N = True
 USE_L10N = False
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static_root', 'static')
-STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media_root', 'media')
-MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+MEDIA_URL = '/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-auto-field
@@ -299,30 +253,27 @@ HAYSTACK_CONNECTIONS = {
 }
 HAYSTACK_SIGNAL_PROCESSOR = 'spirit.search.signals.RealtimeSignalProcessor'
 
-ST_SITE_URL = 'http://127.0.0.1:8000/'
+ST_SITE_URL = 'https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net/'
 
 LOGIN_URL = 'user:login'
 LOGIN_REDIRECT_URL = 'appboard:home'
 LOGOUT_REDIRECT_URL = 'user:login'
 
-#Password_reset
-
-EMAIL_BACKEND= 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER= 'testbot.orefox@gmail.com'
-EMAIL_HOST_PASSWORD= 'dmfuabickxfkkljk'
+# Email settings for production (configure in Azure Application Settings)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', True)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 PASSWORD_RESET_TIMEOUT = 1440
 
-
+# Stripe settings (loaded from environment variables)
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_SECRET_WEBHOOK = os.environ.get('STRIPE_SECRET_WEBHOOK', '')
 
-
-#APPSTORE URLs
-APP_STORE_URL="http://127.0.0.1:3000"
-APP_STORE_FRONTEND_URL='"http://127.0.0.1:3000"/home'
-FRONTEND_DOMAIN = "http://127.0.0.1:3000"
-# handler404 = 'main.urls.page_not_found_view'
+# APPSTORE URLs for production
+APP_STORE_URL = "https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net"
+APP_STORE_FRONTEND_URL = "https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net/home"
+FRONTEND_DOMAIN = "https://geodeskai-gtgybgangdhzh7fq.australiasoutheast-01.azurewebsites.net"
